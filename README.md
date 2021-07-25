@@ -26,7 +26,7 @@ Set up a cron or schedule job to run the script on Monday, Wednesday, & Fridays 
 
 # WARNING
 - No guarantees, this is not stock advice.
-I'm not responsible for any losses, but wouldn't mind if you shared some of the winnings :-)
+- I'm not responsible for any losses, but wouldn't mind if you shared some of the winnings :-)
 
 
 ## Buy me a coffe/donations
