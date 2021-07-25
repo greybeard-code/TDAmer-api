@@ -29,5 +29,5 @@ Set up a cron or schedule job to run the script on Monday, Wednesday, & Fridays 
 - I'm not responsible for any losses, but wouldn't mind if you shared some of the winnings :-)
 
 
-## Buy me a coffe/donations
+## Buy me a coffee/donations
 soon.
