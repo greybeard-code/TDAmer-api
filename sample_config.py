@@ -1,10 +1,8 @@
 # Set the  API_Key and Account ID for your account
-API_KEY = 'ONDIVKQH1IQXZXVBM4TYVFFVXVZIADDO@AMER.OAUTHAP'
+API_KEY = 'your_key_here@AMER.OAUTHAP'
 TOKEN_PATH = 'token'
 REDIRECT_URI = 'https://localhost'
-ACCOUNT_ID = 238822073   #ira account
-MAIN_ACCOUNT_ID = 233657352  #main acct
-# need to add multi account support
+ACCOUNT_ID = 126456789   #trading account
 
 
 # The strategy for each day
@@ -54,5 +52,3 @@ Zero_dte_strategies = {
         'target' :.90
     },
 }
-
-# potental to add 7Day or 30dte strategies
