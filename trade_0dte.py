@@ -199,7 +199,7 @@ token_created = pd.to_datetime(data['creation_timestamp'], unit='s')
 token_expires = token_created + timedelta( days=90)
 print(" Authentication Token Created: ",  str(token_created) , " Will Expire: ", str(token_expires) )
 # add warning when nearing expiration
-if (token_expires < datetime.now -timedelta(days=7)) :
+if (token_expires < datetime.now() - timedelta(days=7)) :
         print("  --**-- Authorization token expiring soon. Run token_renew.py to renew.")
 
 # End log/reporting
