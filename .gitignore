@@ -6,6 +6,7 @@ config.py
 # platform depend
 chromedriver
 __pycache__
+.vscode
 
 # ignore all logs
 *.log

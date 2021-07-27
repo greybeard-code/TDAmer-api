@@ -15,8 +15,6 @@ import bisect
 import pandas as pd
 import config
 
-# Make sure we're in our script direcotry 
-os.chdir(os.path.dirname(sys.argv[0]))
 
 # flag to trade or not, used by trades that filter
 make_trade = False
@@ -42,7 +40,7 @@ elif day_of_week == 4:
         trade_strat =  config.Zero_dte_strategies[ "Friday"]
         trade_date = today + timedelta( (4-today.weekday()) % 7 )
 else:
-        trade_day = "Testing -Friday"
+        trade_day = "Testing-Friday"
         trade_strat =  config.Zero_dte_strategies[ "Friday"]
         trade_date = today + timedelta( (4-today.weekday()) % 7 )
 
@@ -55,21 +53,6 @@ c = easy_client(
 
 
 
-# Monday Strategy - should change this to a object later
-# trade_under = "$SPX.X"  # Underlying Stock for option trade
-# trade_filter = 0  # place holder for Entry filter 
-# trade_strike_count = 2  # how far away from ATM
-# trade_strike_direction = "OTM"
-# 
-# trade_strike_width = 1 # how many strikes wide
-# trade_close_rule = .75
-# trade_strategy = c.Options.Strategy.VERTICAL
-# trade_qty = 1 # number to buy
-# trade_price_target = .90  # Percent of Mid Price to target order limit
-# #trade_execute_time = datetime.datetime.strptime('9:45, '%T').time()
-
-
-#strike_range= trade_strike_direction, 
 
 # Start the logs/ reporting
 print ("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
@@ -86,13 +69,14 @@ resp = c.get_price_history( trade_strat["under"],
         frequency=Client.PriceHistory.Frequency.DAILY)
 history=resp.json( )
 df = pd.DataFrame(history["candles"])
+#convert date colum to readable text
 df["date"] = pd.to_datetime(df['datetime'], unit='ms')
+# calculate 21ema & 5ema for each
 df["21ema"] = pd.Series.ewm(df["close"], span=21).mean()
 df["5ema"] = pd.Series.ewm(df["close"], span=5).mean()
 print ( df.tail())
 
 if trade_strat["filter"] =='Alpha5' :
-        # get  10 days of pricing and calulate 5ema for each
         #Is last night's 5ema over day before?
         print("Calculating Alpha 5")
         if df["5ema"].iloc[-1]> df["5ema"].iloc[-2] :
@@ -100,7 +84,6 @@ if trade_strat["filter"] =='Alpha5' :
                 make_trade=True
 
 elif trade_strat["filter"] =='21ema' :
-        # get  30 days of pricing and calulate 21ema for each
         # Is last night's closing over 21ema? 
         print ("Calculating 21ema")
         if df["close"].iloc[-1] > df["21ema"].iloc[-1] :
@@ -128,7 +111,7 @@ results = c.get_option_chain( trade_strat["under"],
 
 results = results.json() # pull out the json data
 if results['status'] == 'FAILED':
-    print ("Getting the option chain failed")
+    print ("Getting the option chain failed.")
     make_trade = False
     sys.exit()
     
@@ -141,7 +124,7 @@ chain = results["putExpDateMap"] # pull the options chain, enumerated by the str
 expirations = list(chain.keys()) # expirations in the chain
 
 
-# should only be one exparation date
+# should only be one expiration date
 chain = chain[expirations[0]] # only one, but pick it
 strikes = list(map(float,chain.keys()))
 
@@ -191,7 +174,7 @@ if make_trade :
         order_id = Utils(c, config.ACCOUNT_ID).extract_order_id(r)
         print ("Order placed, order ID-", order_id )
 
-# need to figure out how to place a limit order to close position
+# wait 5 for order to be submitted & maybe filled
 time.sleep(5)  # wait 5 seconds
 # check if order is filled ? loop?
 
@@ -208,14 +191,14 @@ if trade_strat["closing"] > 0 :
         order_id = Utils(c, config.ACCOUNT_ID).extract_order_id(r)
         print ("Sell to Close order placed, order ID-", order_id )
 
-# Read TDA token to note token exparation
+# Read TDA token to note token expiration
 with open(config.TOKEN_PATH) as file:
         data = json.load(file)
 #print(json.dumps(data, indent=4))
 token_created = pd.to_datetime(data['creation_timestamp'], unit='s')
 token_expires = token_created + timedelta( days=90)
 print(" Authentication Token Created: ",  str(token_created) , " Will Expire: ", str(token_expires) )
-# add warning when nearing exparation
+# add warning when nearing expiration
 if (token_expires < datetime.now -timedelta(days=7)) :
         print("  --**-- Authorization token expiring soon. Run token_renew.py to renew.")
 
