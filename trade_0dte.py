@@ -9,11 +9,14 @@ from tda.orders.common import Duration, Session
 from tda.auth import easy_client
 from tda.client import Client
 from tda.utils import Utils
-import json, sys
+import json, time
 from datetime import datetime, timedelta
 import bisect 
 import pandas as pd
 import config
+
+# Make sure we're in our script direcotry 
+os.chdir(os.path.dirname(sys.argv[0]))
 
 # flag to trade or not, used by trades that filter
 make_trade = False
@@ -189,6 +192,10 @@ if make_trade :
         print ("Order placed, order ID-", order_id )
 
 # need to figure out how to place a limit order to close position
+time.sleep(5)  # wait 5 seconds
+# check if order is filled ? loop?
+
+#place close order
 if trade_strat["closing"] > 0 :
         print(" Placing closing order.")
         close_price_target = price_target * trade_strat["closing"]
@@ -201,6 +208,16 @@ if trade_strat["closing"] > 0 :
         order_id = Utils(c, config.ACCOUNT_ID).extract_order_id(r)
         print ("Sell to Close order placed, order ID-", order_id )
 
+# Read TDA token to note token exparation
+with open(config.TOKEN_PATH) as file:
+        data = json.load(file)
+#print(json.dumps(data, indent=4))
+token_created = pd.to_datetime(data['creation_timestamp'], unit='s')
+token_expires = token_created + timedelta( days=90)
+print(" Authentication Token Created: ",  str(token_created) , " Will Expire: ", str(token_expires) )
+# add warning when nearing exparation
+if (token_expires < datetime.now -timedelta(days=7)) :
+        print("  --**-- Authorization token expiring soon. Run token_renew.py to renew.")
 
 # End log/reporting
 print(" ")

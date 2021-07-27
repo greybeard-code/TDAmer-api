@@ -1,6 +1,7 @@
 # protect us
-token
+auth-token.json
 config.py
+
 
 # platform depend
 chromedriver

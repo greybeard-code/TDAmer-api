@@ -9,7 +9,7 @@ Developed on Pyton 3.8
 pip install tda-api
 pip install selenium
 ```
-You will need to install the Chrome Browser and add the chromedriver in the same directory as the scripts
+You will need to install the Chrome Browser and add the chromedriver in a directory in your path (I use /usr/local/bin )
 chromedriver - https://sites.google.com/chromium.org/driver/
 
 You will need a TD Ameritrade account with Options permissions 
@@ -20,9 +20,16 @@ Create a app and get your "Consumer Key"
 Copy the sample_config.py to config.py and add your App Consumer Key and your trading account number
 
 ## Running the program
+Run token_renew.py first to create the authintication token. Run this every month to see if your token is about to expire. The program will renew your token 7 days before expiration. If the token expires, the scheduled code will not run.
+
 You can run the program after hours to test and make sure the order is working. After it runs, just delete the order at TD Ameritrade or in Think or Swim.
 
 Set up a cron or schedule job to run the script on Monday, Wednesday, & Fridays at 9:45am
+```
+# TD Ameri-api BOT
+45 09 * * MON,WED,FRI cd /home/user/TDAmer-api/ && (python3 trade_0dte.py >> trade_0dte.log 2>&1)
+
+```
 
 # WARNING
 - No guarantees, this is not stock advice.
