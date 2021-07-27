@@ -5,6 +5,7 @@ config.py
 
 # platform depend
 chromedriver
+__pycache__
 
 # ignore all logs
 *.log
