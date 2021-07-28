@@ -181,15 +181,16 @@ time.sleep(5)  # wait 5 seconds
 #place close order
 if trade_strat["closing"] > 0 :
         print(" Placing closing order.")
-        close_price_target = price_target * trade_strat["closing"]
+        close_price_target = price_target * (1-trade_strat["closing"])
+        close_price_target = (round((close_price_target/5))*5 ) / 100  # convert to a 5 cent mark
         put_order = bull_put_vertical_close(buy_leg["symbol"],sell_leg["symbol"],trade_strat["quantity"], close_price_target)
         put_order.set_duration(orders.common.Duration.GOOD_TILL_CANCEL)
         r = c.place_order(config.ACCOUNT_ID, put_order)
 
         print("Order status code - " ,r.status_code)
-
-        order_id = Utils(c, config.ACCOUNT_ID).extract_order_id(r)
-        print ("Sell to Close order placed, order ID-", order_id )
+        if r.status_code == 201 : 
+                order_id = Utils(c, config.ACCOUNT_ID).extract_order_id(r)
+                print ("Sell to Close order placed, order ID-", order_id )
 
 # Read TDA token to note token expiration
 with open(config.TOKEN_PATH) as file:
