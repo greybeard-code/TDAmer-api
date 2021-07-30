@@ -153,11 +153,12 @@ def trading_core(trade_strat, trade_date  ):
             r = c.place_order(config.ACCOUNT_ID, put_order)
 
             print("Order status code - " ,r.status_code)
-            if r.status_code == httpx.codes.OK : 
+            if r.status_code < 400 : #http codes under 400 are success. usually 200 or 201
                     order_id = Utils(c, config.ACCOUNT_ID).extract_order_id(r)
                     print ("Order placed, order ID-", order_id )
             else :  
                     print("FAILED - placing the order failed.")
+                    make_trade = False  # stop the closing order
 
 
     # wait 5 for order to be submitted & maybe filled
@@ -174,7 +175,7 @@ def trading_core(trade_strat, trade_date  ):
             r = c.place_order(config.ACCOUNT_ID, put_order)
 
             print("Order status code - " ,r.status_code)
-            if r.status_code == httpx.codes.OK : 
+            if r.status_code  < 400 : #http codes under 400 are success. usually 200 or 201: 
                     order_id = Utils(c, config.ACCOUNT_ID).extract_order_id(r)
                     print ("Sell to Close order placed, order ID-", order_id )
             else :  
