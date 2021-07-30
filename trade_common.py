@@ -90,6 +90,7 @@ def trading_core(trade_strat, trade_date  ):
             include_quotes=True,
             from_date= trade_date,
             to_date= trade_date )
+# need to add multi account support
 
     results = results.json() # pull out the json data
     if results['status'] == 'FAILED':

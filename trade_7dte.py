@@ -9,6 +9,32 @@ import config
 import trade_common
 
 
+# The strategy, Using Main incase we want to add others later
+# First line is the Day of the week the trade occurs
+#     'under' : The stock the option is based on
+#     'filter': Which Filter? none. Alpha5, or 21ema
+#     'distance': How far a way from ATM for the first strike
+#     'direction': Strikes  ITM or OTM
+#     'type': PUT or CALL ?
+#     'width': How many strikes wide is the vertical?
+#     'closing': Close trade at what profit? decimal percent, 0 for let expire
+#     'quantity': How many vertical to purchase
+#     'target' : Percent of Mid Price for purchase limit
+
+Seven_dte_strategies = {
+    'Main' :{
+        'under' : '$SPX.X',
+        'filter': '8EMA',
+        'distance': 1,
+        'direction': 'OTM',
+        'type': 'PUT',
+        'width': 2,
+        'closing': 0,
+        'quantity': 1,
+        'target' :.90
+    },
+}
+
 
 # Pick Trade - What is today?
 # set date range, use datetime objects. Start now and go 7 days forward

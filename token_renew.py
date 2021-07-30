@@ -15,7 +15,7 @@ import config
 
 from selenium import webdriver
 
-
+print("Checking status of TD Ameritrade authrntication token.")
 # Read token
 if (os.path.exists(config.TOKEN_PATH) ):
     with open(config.TOKEN_PATH) as file:
