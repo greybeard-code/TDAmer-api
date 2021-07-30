@@ -101,7 +101,7 @@ def trading_core(trade_strat, trade_date  ):
     #grab last price
     last_price_under = results["underlying"]["last"]
     print ("Last price of underlying, ",trade_strat["under"], "- $", last_price_under)
-    print ("OPtion expiration date:", trade_date)
+    print ("Option expiration date:", trade_date)
 
     #print(json.dumps(results, indent=4))
     chain = results["putExpDateMap"] # pull the options chain, enumerated by the strike date

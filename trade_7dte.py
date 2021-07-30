@@ -46,7 +46,7 @@ today = datetime.today()
 day_of_week = today.weekday()
 
 trade_day="Wednesday"
-trade_strat =  config.Seven_dte_strategies[ "Main"]
+trade_strat =  Seven_dte_strategies[ "Main"]
 trade_date = today + timedelta( (2-today.weekday()) % 7 )
 
 

@@ -68,19 +68,19 @@ today = datetime.today()
 day_of_week = today.weekday()
 if day_of_week == 0:
         trade_day="Monday"
-        trade_strat =  config.Zero_dte_strategies[ "Monday"]
+        trade_strat =  Zero_dte_strategies[ "Monday"]
         trade_date = today + timedelta( (0-today.weekday()) % 7 )
 elif day_of_week == 2:
         trade_day="Wednesday"
-        trade_strat =  config.Zero_dte_strategies[ "Wednesday"]
+        trade_strat =  Zero_dte_strategies[ "Wednesday"]
         trade_date = today + timedelta( (2-today.weekday()) % 7 )
 elif day_of_week == 4:
         trade_day="Friday"
-        trade_strat =  config.Zero_dte_strategies[ "Friday"]
+        trade_strat =  Zero_dte_strategies[ "Friday"]
         trade_date = today + timedelta( (4-today.weekday()) % 7 )
 else:
         trade_day = "Testing-Friday"
-        trade_strat =  config.Zero_dte_strategies[ "Friday"]
+        trade_strat =  Zero_dte_strategies[ "Friday"]
         trade_date = today + timedelta( (4-today.weekday()) % 7 )
 
 
