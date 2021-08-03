@@ -24,7 +24,7 @@ import trade_common
 Seven_dte_strategies = {
     'Main' :{
         'under' : '$SPX.X',
-        'filter': '8EMA',
+        'filter': '8ema',
         'distance': 1,
         'direction': 'OTM',
         'type': 'PUT',
@@ -57,7 +57,14 @@ print(" Running at : ", datetime.now())
 print("")
 
 ##### Common Core #####
-trade_common.trading_core( trade_strat, trade_date )
+
+#test the filter
+make_trade = trade_common.test_filter(trade_strat["filter"], trade_strat["under"])
+
+if make_trade:
+     trade_common.trading_vertical( trade_strat, trade_date )
+
+trade_common.check_auth_token
 
 # End log/reporting
 print(" ")
