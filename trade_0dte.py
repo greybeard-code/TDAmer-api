@@ -22,26 +22,28 @@ import trade_common
 #     'quantity': How many vertical to purchase
 #     'target' : Percent of Mid Price for purchase limit
 
+# updated strategy 8/2/2021.  New filter on Monday. run at 9:55am eastern
+# 8/3/21 update - Now Wed has Alpha3 & 50 % proffit
 Zero_dte_strategies = {
     'Monday' :{
         'under' : '$SPX.X',
-        'filter': 'none',
+        'filter': 'Alpha3',
         'distance': 1,
         'direction': 'OTM',
         'type': 'PUT',
         'width': 1,
-        'closing': .75,
+        'closing': 0,
         'quantity': 1,
         'target' :.90
     },
     'Wednesday' :{
         'under' : '$SPX.X',
-        'filter': 'Alpha5',
+        'filter': 'Alpha3',
         'distance': 2,
         'direction': 'OTM',
         'type': 'PUT',
         'width': 1,
-        'closing': .75,
+        'closing': .50,
         'quantity': 1,
         'target' :.90
     },
@@ -95,8 +97,13 @@ print(" Running at : ", datetime.now())
 print("")
 
 
-##### Common Core #####
-trade_common.trading_core( trade_strat, trade_date )
+#test the filter
+make_trade = trade_common.test_filter(trade_strat["filter"], trade_strat["under"])
+
+if make_trade:
+     trade_common.trading_vertical( trade_strat, trade_date )
+
+trade_common.check_auth_token
 
 # End log/reporting
 print(" ")
