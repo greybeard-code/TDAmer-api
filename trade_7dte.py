@@ -24,7 +24,7 @@ import trade_common
 Seven_dte_strategies = {
     'Main' :{
         'under' : '$SPX.X',
-        'filter': '8ema',
+        'filter': '8over21',
         'distance': 1,
         'direction': 'OTM',
         'type': 'PUT',
@@ -36,37 +36,39 @@ Seven_dte_strategies = {
 }
 
 
-# Pick Trade - What is today?
 # set date range, use datetime objects. Start now and go 7 days forward
-# Define the next weekday date for strategies that are day of week specific
 # 0=Monday, 2= Wed, 4=Friday
 today = datetime.today()
 
-#trade_strat is a list
-day_of_week = today.weekday()
 
-trade_day="Wednesday"
-trade_strat =  Seven_dte_strategies[ "Main"]
-trade_date = today + timedelta( (2-today.weekday()) % 7 )
-
-
-# Start the logs/ reporting
 print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
-print(" 7DTE Option Trader for ", trade_day, " on underlying ", trade_strat["under"])
-print(" Running at : ", datetime.now())
-print("")
 
-##### Common Core #####
+# only run this on Wed
+if today.weekday() == 2:
+    trade_day="Wednesday"
+    trade_strat =  Seven_dte_strategies[ "Main"]
+    trade_date = today + timedelta( day=7)
 
-#test the filter
-make_trade = trade_common.test_filter(trade_strat["filter"], trade_strat["under"])
 
-if make_trade:
-     trade_common.trading_vertical( trade_strat, trade_date )
+    # Start the logs/ reporting
+    print(" 7DTE Option Trader for ", trade_day, " on underlying ", trade_strat["under"])
+    print(" Running at : ", datetime.now())
+    print("")
 
-trade_common.check_auth_token
+    ##### Common Core #####
 
-# End log/reporting
-print(" ")
-print("Finshed at : ", datetime.now())
+    #test the filter
+    make_trade = trade_common.test_filter(trade_strat["filter"], trade_strat["under"])
+
+    if make_trade:
+        trade_common.trading_vertical( trade_strat, trade_date )
+
+    trade_common.check_auth_token
+
+    # End log/reporting
+    print(" ")
+    print("Finshed at : ", datetime.now())
+else:
+    print(" ERROR - Only run this on Wednesday")
+
 print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
