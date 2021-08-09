@@ -20,10 +20,12 @@ import trade_common
 #     'width': How many strikes wide is the vertical?
 #     'closing': Close trade at what profit? decimal percent, 0 for let expire
 #     'quantity': How many vertical to purchase
-#     'target' : Percent of Mid Price for purchase limit
+#     'target' : Percent of Mid Price for purchase limit. Can be higher now we have order checking
 
 # updated strategy 8/2/2021.  New filter on Monday. run at 9:55am eastern
 # 8/3/21 update - Now Wed has Alpha3 & 50 % proffit
+# Use $SPX.X for large accounts, $XSP.X for smaller
+
 Zero_dte_strategies = {
     'Monday' :{
         'under' : '$SPX.X',
@@ -34,7 +36,7 @@ Zero_dte_strategies = {
         'width': 1,
         'closing': 0,
         'quantity': 1,
-        'target' :.90
+        'target' : 1.0
     },
     'Wednesday' :{
         'under' : '$SPX.X',
@@ -45,18 +47,18 @@ Zero_dte_strategies = {
         'width': 1,
         'closing': .50,
         'quantity': 1,
-        'target' :.90
+        'target' : 1.10
     },
     'Friday' :{
         'under' : '$SPX.X',
-        'filter': '21ema',
-        'distance': 2,
+        'filter': 'CloseOver21',
+        'distance': 1,
         'direction': 'OTM',
         'type': 'PUT',
         'width': 1,
         'closing': 0,
         'quantity': 1,
-        'target' :.90
+        'target' : 1.10
     },
 }
 

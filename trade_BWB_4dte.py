@@ -25,18 +25,16 @@ import trade_common
 
 # This is the Broken Wing Butterfly strategy.
 # 3ema > 8ema, Sell 2 Delta 55 strikes, Buy 1 - 2 strikes lower, Buy 1 -1 strike higher.
+# Use $SPX.X for large accounts, XSP for smaller
 
 BWB_4_dte_strategies = {
     'Main' :{
         'under' : '$SPX.X',
-        'filter': '3ema',
-        'distance': 1,
-        'direction': 'OTM',
-        'type': 'PUT',
-        'width': 2,
+        'filter': '3over8',
+        'type' : 'PUT',
         'closing': 0,
         'quantity': 1,
-        'target' :.90
+        'target' : 1
     },
 }
 

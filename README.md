@@ -25,16 +25,18 @@ Run token_renew.py first to create the authentication token. Run this every mont
 
 You can run the program after hours to test and make sure the order is working. After it runs, just delete the order at TD Ameritrade or in Think or Swim.
 
-Set up a cron or schedule job to run the 0dte script on Monday & Wednesday at 9:45am and & Fridays at 9:35am. Run the 7dte script on Wednesdays at 3:30pm.  Adjust your time if you're not in eastern time zone. The job needs to change to the directory the script is in so it finds the authentication token. Edit /home/user/TDAmeri-api to match your system.
+Set up a cron or schedule job to run the 0dte script on Monday,  Wednesday, and Fridays at at the optimal time. Run the 7dte script on Wednesdays at 3:30pm(end of day).  Adjust your time if you're not in eastern time zone. The job needs to change to the directory the script is in so it finds the authentication token. Edit /home/user/TDAmeri-api to match your system.
 ```
 # TD Ameri-api BOT  -- Times updated for Aug 2021 update
-55 09 * * MON,WED cd /home/user/TDAmer-api/ && (python3 trade_0dte.py >> trade_0dte.log 2>&1)
-35 09 * * FRI     cd /home/user/TDAmer-api/ && (python3 trade_0dte.py >> trade_0dte.log 2>&1)
+55 09 * * MON   cd /home/user/TDAmer-api/ && (python3 trade_0dte.py >> trade_0dte.log 2>&1)
+55 09 * * WED   cd /home/user/TDAmer-api/ && (python3 trade_0dte.py >> trade_0dte.log 2>&1)
+35 09 * * FRI   cd /home/user/TDAmer-api/ && (python3 trade_0dte.py >> trade_0dte.log 2>&1)
 
-30 15 * * WED     cd /home/user/TDAmer-api/ && (python3 trade_7dte.py >> trade_7dte.log 2>&1)
-30 15 * * MON     cd /home/user/TDAmer-api/ && (python3 trade_BWB_4dte.py >> trade_BWB_4dte.log 2>&1)
+30 15 * * WED   cd /home/user/TDAmer-api/ && (python3 trade_7dte.py >> trade_7dte.log 2>&1)
+30 15 * * MON   cd /home/user/TDAmer-api/ && (python3 trade_BWB_4dte.py >> trade_BWB_4dte.log 2>&1)
 
 ```
+The code will monitor the order and after a minute, lower the target price by 5 cents until the order fills or times out after 5 tries
 
 # WARNING
 - No guarantees, this is not stock advice.
@@ -46,3 +48,4 @@ https://www.buymeacoffee.com/greybeardcode
 
 ## Updates
 2021-0803 - Added new Aug 2021 0dte rules, cleaned up common code, added BWB trade bot
+2021-0809 - cleaned up common code, added order monitoring 

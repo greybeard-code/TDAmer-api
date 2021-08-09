@@ -2,9 +2,19 @@
 # See StockMartetOptionsTrading.net for info on trading
 # Code by Derek Jones
 
+from logging import makeLogRecord
 from tda import orders, utils
 from tda.orders.options import bull_put_vertical_open, bull_put_vertical_close
-from tda.orders.common import Duration, Session
+from tda.orders.generic import OrderBuilder
+from tda.orders.common import (
+        Duration,
+        OrderStrategyType,
+        OrderType,
+        Session,
+        ComplexOrderStrategyType,
+        OptionInstruction,
+        Destination
+        )
 from tda.auth import easy_client
 from tda.client import Client
 from tda.utils import Utils
@@ -14,6 +24,7 @@ import bisect
 import pandas as pd
 import config
 
+##############################################################################################
 def test_filter (filter_name, stock) :
     print("Testing for", filter_name,"filter with", stock,".")
     # flag to trade or not
@@ -56,22 +67,22 @@ def test_filter (filter_name, stock) :
                     print ("Good to trade")
                     make_trade=True
 
-    elif filter_name =='21ema' :
+    elif filter_name =='CloseOver21' :
             # Is last night's closing over 21ema? 
             print ("Calculating  Close over 21ema")
             if df["close"].iloc[-1] > df["21ema"].iloc[-1] :
                     print ("Good to trade")
                     make_trade=True
 
-    elif filter_name =='8ema' :
-            # Is last night's closing over 8ema? 
+    elif filter_name =='8over21' :
+            # Is 8ema over 21ema? 
             print ("Calculating 8ema over 21ema")
             if df["8ema"].iloc[-1] > df["21ema"].iloc[-1] :
                     print ("Good to trade")
                     make_trade=True
 
-    elif filter_name =='3ema' :
-            # Is 3ema over 8ems 
+    elif filter_name =='3over8' :
+            # Is 3ema over 8ema 
             print ("Calculating 3ema over 8ema")
             if df["3ema"].iloc[-1] > df["8ema"].iloc[-1] :
                     print ("Good to trade")
@@ -94,6 +105,58 @@ def test_filter (filter_name, stock) :
 
     return make_trade
 
+##############################################################################
+def nicklefy (org_price):
+    # Convert a price to the nearest nickle. SPX options are priced at 5 cent increments 
+    new_price = org_price  * 100 #bring up to whole
+    new_price= round( new_price/5, 2) *5  / 100  # convert to a 5 cent mark
+    new_price = round(new_price, 2)
+    return new_price
+
+##############################################################################
+def check_fulfillment (order, order_id, org_price, decrement):
+    # check to see if order is filled.
+    #Need existing order object, the TDA order_id, 
+    #     the original price, and how much to subtract each loop
+    make_trade = True
+    #Setup Client
+    client = easy_client(
+            api_key= config.API_KEY,
+            redirect_uri=config.REDIRECT_URI,
+            token_path=config.TOKEN_PATH)
+
+    order_status = client.get_order(order_id, config.ACCOUNT_ID).json()
+    print(json.dumps(order_status, indent=4))  # testing
+    print("Order status:", order_status['status'])
+    loop_count =0
+    lower_price = org_price
+    while order_status['status'] not in ['FILLED', 'REJECTED', 'CANCELED'] :
+        loop_count += 1
+        print(" Changing price by",decrement,"and reordering. ",loop_count)
+        #change price
+        lower_price = (lower_price - decrement ) #lower price 
+        lower_price= nicklefy( lower_price )  # convert to a 5 cent mark
+        print("New price : {:.2f}".format(lower_price))
+        order = order.copy_price(lower_price) 
+        r = client.replace_order(config.ACCOUNT_ID, order_id, order)
+
+        print("Order status code - " ,r.status_code)
+        if r.status_code < 400 : #http codes under 400 are success. usually 200 or 201
+            order_id = Utils(client, config.ACCOUNT_ID).extract_order_id(r)
+            print ("Order placed, order ID-", order_id )
+        else :  
+            print("FAILED - placing the order failed.")
+            make_trade = False  # stop the closing order
+            break
+
+
+        time.sleep(60)  # wait 60 seconds
+        if loop_count == 5:  #TD Ameri fails the order at this point
+             break
+
+
+    return order_id, make_trade
+        
 ##############################################################################
 def trading_vertical(trade_strat, trade_date  ):
     #import trade strategy and trade date (expiration date)
@@ -164,12 +227,13 @@ def trading_vertical(trade_strat, trade_date  ):
     #calculate prices
     price_nat = round(sell_leg['bid'] - buy_leg['ask'],2)
     price_high = round(sell_leg['mark'] - buy_leg['mark'],2)
-    sell_leg['mid'] = round(sell_leg['bid'] - sell_leg['ask'],2)
-    buy_leg['mid'] = round(buy_leg['bid'] - buy_leg['ask'],2)
+    sell_leg['mid'] =round((sell_leg['bid'] + sell_leg['ask'])/2,2)
+    buy_leg['mid'] = round((buy_leg['bid']  + buy_leg['ask'])/2,2)
 
     price_mid = round( sell_leg['mid'] - buy_leg['mid'],2) 
-    price_target = round( price_mid * trade_strat["target"] , 2) *100 # lower the target to get better fills
-    price_target = (round((price_target/5))*5 ) / 100  # convert to a 5 cent mark
+    price_target = round( price_mid * trade_strat["target"] , 2) # adjust the target to get better fills
+    # XSP doesn't do nickle steps in pricing, need to add code to not use steps
+    price_target = nicklefy(price_target)  # convert to a 5 cent mark
 
     print("Price Bid    = {:.2f}".format(sell_leg['bid'] )," - Price Ask = {:.2f}".format(buy_leg['ask']), " = Price Nat = ", "{:.2f}".format(price_nat))
     print("Price High   = {:.2f}".format(price_high))
@@ -187,21 +251,24 @@ def trading_vertical(trade_strat, trade_date  ):
 
     print("Order status code - " ,r.status_code)
     if r.status_code < 400 : #http codes under 400 are success. usually 200 or 201
-                order_id = Utils(c, config.ACCOUNT_ID).extract_order_id(r)
-                print ("Order placed, order ID-", order_id )
+            order_id = Utils(c, config.ACCOUNT_ID).extract_order_id(r)
+            print ("Order placed, order ID-", order_id )
     else :  
-                print("FAILED - placing the order failed.")
-                make_trade = False  # stop the closing order
+            print("FAILED - placing the order failed.")
+            make_trade = False  # stop the closing order
 
 
     # wait 5 for order to be submitted & maybe filled
-    time.sleep(5)  # wait 5 seconds
+    time.sleep(60)  # wait 60 seconds
     # Need to add code to  check if order is filled ? loop?
+    order_id, make_trade = check_fulfillment(put_order, order_id,price_target, .05)
+
+
 
     #place close order
-    if trade_strat["closing"] > 0   :
-            close_price_target = round(price_target * (1-trade_strat["closing"]), 2) *100 #Set limit order at the inverse of the profit goal
-            close_price_target = (round((close_price_target/5))*5 ) / 100  # convert to a 5 cent mark
+    if trade_strat["closing"] > 0 and make_trade  :
+            close_price_target = round(price_target * (1-trade_strat["closing"]), 2)  #Set limit order at the inverse of the profit goal
+            close_price_target = nicklefy(close_price_target)  # convert to a 5 cent mark
             print(" Placing closing order at ",close_price_target)
             put_order = bull_put_vertical_close(buy_leg["symbol"],sell_leg["symbol"],trade_strat["quantity"], close_price_target)
             put_order.set_duration(orders.common.Duration.GOOD_TILL_CANCEL)
@@ -329,8 +396,8 @@ def trading_butterfly(trade_strat, trade_date  ):
     price_nat  = round((sell_leg['bid'] *2) - (buy_lower_leg['ask'] +  buy_higher_leg['ask']),2)
     price_high = round((sell_leg['mark'] *2) - (buy_lower_leg['mark'] + buy_higher_leg['mark']) ,2)
     price_mid  = round((sell_leg['mid'] *2) - (buy_lower_leg['mid'] + buy_higher_leg['mid']) ,2)
-    price_target = round( price_mid * trade_strat["target"] , 2) *100 # lower the target to get better fills
-    price_target = (round((price_target/5))*5 ) / 100  # convert to a 5 cent mark
+    price_target = round( price_mid * trade_strat["target"] , 2) # lower the target to get better fills
+    price_target = nicklefy(price_target)  # convert to a 5 cent mark
 
     print("Price Nat    = ", "{:.2f}".format(price_nat))
     print("Price High   = ", "{:.2f}".format(price_high))
@@ -339,19 +406,7 @@ def trading_butterfly(trade_strat, trade_date  ):
     print(" ")
 
     # Ready the order (PUT or CALL??)
-    # Order ID 4706366372
-    trade_strat["quantity"] 
-    from tda.orders.generic import OrderBuilder
-    from tda.orders.common import (
-        Duration,
-        OrderStrategyType,
-        OrderType,
-        Session,
-        ComplexOrderStrategyType,
-        OptionInstruction,
-        Destination
-        )
-
+    
     order = OrderBuilder() \
         .set_complex_order_strategy_type(ComplexOrderStrategyType.BUTTERFLY) \
         .set_duration(Duration.DAY) \
@@ -381,11 +436,12 @@ def trading_butterfly(trade_strat, trade_date  ):
 
 
     # wait 5 for order to be submitted & maybe filled
-    time.sleep(5)  # wait 5 seconds
-    # check if order is filled ? loop?
-
+    time.sleep(60)  # wait 60 seconds
+    # check if order is filled , send starting price too
+    order_id, make_trade = check_fulfillment(order, order_id,price_target, .05)
+  
     #place close order
-    if trade_strat["closing"] > 0   :
+    if trade_strat["closing"] > 0  and make_trade :
             print(" Placing closing order.")
             close_price_target = price_target * (1-trade_strat["closing"])
             close_price_target = (round((close_price_target/5))*5 ) / 100  # convert to a 5 cent mark

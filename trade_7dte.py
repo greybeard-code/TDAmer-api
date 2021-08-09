@@ -20,6 +20,7 @@ import trade_common
 #     'closing': Close trade at what profit? decimal percent, 0 for let expire
 #     'quantity': How many vertical to purchase
 #     'target' : Percent of Mid Price for purchase limit
+# Use $SPX.X for large accounts, XSP for smaller
 
 Seven_dte_strategies = {
     'Main' :{
