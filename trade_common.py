@@ -109,7 +109,7 @@ def test_filter (filter_name, stock) :
 def nicklefy (org_price):
     # Convert a price to the nearest nickle. SPX options are priced at 5 cent increments 
     new_price = org_price  * 100 #bring up to whole
-    new_price= round( new_price/5, 0) *5  / 100  # convert to a 5 cent mark
+    new_price = round( new_price/5, 0) *5  / 100  # convert to a 5 cent mark
     new_price = round(new_price, 2)
     return new_price
 
@@ -126,7 +126,7 @@ def check_fulfillment (order, order_id, org_price, decrement):
             token_path=config.TOKEN_PATH)
 
     order_status = client.get_order(order_id, config.ACCOUNT_ID).json()
-    print(json.dumps(order_status, indent=4))  # testing
+    #print(json.dumps(order_status, indent=4))  # testing
     print("Order status:", order_status['status'])
     loop_count =0
     lower_price = org_price
