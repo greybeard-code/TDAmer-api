@@ -18,7 +18,7 @@ from tda.orders.common import (
 from tda.auth import easy_client
 from tda.client import Client
 from tda.utils import Utils
-import json, time, httpx
+import json, time, httpx, sys
 from datetime import datetime, timedelta
 import bisect 
 import pandas as pd
@@ -56,8 +56,8 @@ def test_filter (filter_name, stock) :
     #clean up unused columns
     del df["volume"]
     del df["datetime"]
-    print("Pricing History:")
-    print ( df.tail())
+    #print("Pricing History:")
+    #print ( df.tail())
     print("")
 
     if filter_name =='Alpha5' :
@@ -109,7 +109,7 @@ def test_filter (filter_name, stock) :
 def nicklefy (org_price):
     # Convert a price to the nearest nickle. SPX options are priced at 5 cent increments 
     new_price = org_price  * 100 #bring up to whole
-    new_price= round( new_price/5, 2) *5  / 100  # convert to a 5 cent mark
+    new_price= round( new_price/5, 0) *5  / 100  # convert to a 5 cent mark
     new_price = round(new_price, 2)
     return new_price
 
@@ -186,7 +186,7 @@ def trading_vertical(trade_strat, trade_date  ):
 
     results = results.json() # pull out the json data
     if results['status'] == 'FAILED':
-        print ("Getting the option chain failed.")
+        print ("Getting the option chain failed for date", trade_date)
         make_trade = False
         sys.exit()
         
