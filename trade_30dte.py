@@ -1,5 +1,5 @@
-# Program to trade SMOT 0dte trades.
-# Set up in Cron or scheduler to run at 3:30pm on Wednesdays
+# Program to trade SMOT 30dte trades.
+# Set up in Cron or scheduler to run at 3:30pm on Tuesdays
 
 # See StockMartetOptionsTrading.net for info on trading
 # Code by Derek Jones
@@ -10,10 +10,11 @@ import trade_common
 
 
 # The strategy, Using Main incase we want to add others later
-# First line is the Day of the week the trade occurs
 #     'under' : The stock the option is based on
 #     'filter': Which Filter? none. Alpha5, or 21ema
-#     'distance': How far a way from ATM for the first strike
+#     'distance': How far a way from ATM for the first strike 
+#           OR 
+#         'delta': What delta for the sell strike
 #     'direction': Strikes  ITM or OTM
 #     'type': PUT or CALL ?
 #     'width': How many strikes wide is the vertical?
@@ -22,17 +23,17 @@ import trade_common
 #     'target' : Percent of Mid Price for purchase limit
 # Use $SPX.X for large accounts, $XSP.X  for smaller
 
-Seven_dte_strategies = {
+strategies = {
     'Main' :{
         'under' : '$SPX.X',
-        'filter': '8over21',
-        'distance': 1,
+        'filter': 'CloseOver21',
+        'delta': 45,
         'direction': 'OTM',
         'type': 'PUT',
         'width': 2,
         'closing': 0,
         'quantity': 1,
-        'target' :.90
+        'target' : 1
     },
 }
 
@@ -44,15 +45,20 @@ today = datetime.today()
 
 print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
 
-# only run this on Wed
-if today.weekday() == 2:
-    trade_day="Wednesday"
-    trade_strat =  Seven_dte_strategies[ "Main"]
-    trade_date = today + timedelta( day=7)
+# only run this on Tue
+if today.weekday() == 1:
+#if True:
+    trade_day="Tuesday"
+    trade_strat =  strategies[ "Main"]
+    trade_date = today + timedelta( days=30)
+    # make sure trade_date is a option day (M,W,or F)
+    while trade_date.weekday() != 4:
+        #print("Moving up to next trade day:", trade_date.strftime("%D" ), trade_date.weekday())
+        trade_date = trade_date + timedelta( days=1)
 
 
     # Start the logs/ reporting
-    print(" 7DTE Option Trader for ", trade_day, " on underlying ", trade_strat["under"])
+    print(" 30DTE Option Trader for ", trade_day, " on underlying ", trade_strat["under"])
     print(" Running at : ", datetime.now())
     print("")
 

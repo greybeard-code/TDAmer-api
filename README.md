@@ -34,6 +34,7 @@ Set up a cron or schedule job to run the 0dte script on Monday,  Wednesday, and 
 
 30 15 * * WED   cd /home/user/TDAmer-api/ && (python3 trade_7dte.py >> trade_7dte.log 2>&1)
 30 15 * * MON   cd /home/user/TDAmer-api/ && (python3 trade_BWB_4dte.py >> trade_BWB_4dte.log 2>&1)
+30 15 * * TUE   cd /home/user/TDAmer-api/ && (python3 trade_30dte.py >> trade_30dte.log 2>&1)
 
 ```
 The code will monitor the order and after a minute, lower the target price by 5 cents until the order fills or times out after 5 tries
@@ -49,3 +50,4 @@ https://www.buymeacoffee.com/greybeardcode
 ## Updates
 2021-0803 - Added new Aug 2021 0dte rules, cleaned up common code, added BWB trade bot
 2021-0809 - cleaned up common code, added order monitoring 
+2021-0810 - Added code to support distance or delta for spreads. Added 30dte on Tuedays, Added support for XSP

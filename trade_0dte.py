@@ -47,7 +47,7 @@ Zero_dte_strategies = {
         'width': 1,
         'closing': .50,
         'quantity': 1,
-        'target' : 1.10
+        'target' : 1
     },
     'Friday' :{
         'under' : '$SPX.X',

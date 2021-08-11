@@ -114,10 +114,11 @@ def nicklefy (org_price):
     return new_price
 
 ##############################################################################
-def check_fulfillment (order, order_id, org_price, decrement):
+def check_fulfillment (order, order_id, org_price, decrement, underlying):
     # check to see if order is filled.
     #Need existing order object, the TDA order_id, 
-    #     the original price, and how much to subtract each loop
+    #     the original price,  how much to subtract each loop, & what the underlying stock is
+    #      (for 5 cent marking)
     make_trade = True
     #Setup Client
     client = easy_client(
@@ -135,9 +136,11 @@ def check_fulfillment (order, order_id, org_price, decrement):
         print(" Changing price by",decrement,"and reordering. ",loop_count)
         #change price
         lower_price = (lower_price - decrement ) #lower price 
-        lower_price= nicklefy( lower_price )  # convert to a 5 cent mark
+        if underlying == '$SPX.X':  #SPX needs to be nickled
+            print("Nickefing the price for SPX")
+            lower_price= nicklefy( lower_price )  # convert to a 5 cent mark
         print("New price : {:.2f}".format(lower_price))
-        order = order.copy_price(lower_price) 
+        order = order.copy_price(str(lower_price)) 
         r = client.replace_order(config.ACCOUNT_ID, order_id, order)
 
         print("Order status code - " ,r.status_code)
@@ -152,7 +155,8 @@ def check_fulfillment (order, order_id, org_price, decrement):
 
         time.sleep(60)  # wait 60 seconds
         if loop_count == 5:  #TD Ameri fails the order at this point
-             break
+            print("Giving up on lowering price to fill")
+            break
 
 
     return order_id, make_trade
@@ -177,7 +181,7 @@ def trading_vertical(trade_strat, trade_date  ):
     # Get the options chain from TDA
     results = c.get_option_chain( trade_strat["under"], 
             contract_type= trade_type,
-            strike_count= 10,
+            strike_count= 20,
             include_quotes=True,
             from_date= trade_date,
             to_date= trade_date )
@@ -211,16 +215,38 @@ def trading_vertical(trade_strat, trade_date  ):
     # bisect_left and subtraction for OTM puts
     atm_position =  bisect.bisect_left(strikes,last_price_under)
     atm_strike = strikes[ atm_position]
+    # need to pick the sell strike from distance or delta
+    #print(json.dumps(chain, indent =4))
+    if "delta" in trade_strat:
+        #Use Delta if provided
+        for  strike  in chain  :
+            #find maching delta
+            #print(strike, chain[strike][0]['delta'])
+            strike_delta = abs(chain[strike][0]['delta'])*100
+            if strike_delta > trade_strat['delta'] :
+                strike= float(strike)
+                print("Found Delta", strike, strike_delta)
+                sell_position = strikes.index(strike)
+                buy_position = sell_position - trade_strat["width"]
+                break
+    else: # assume if no delta, then distance from ATM
+        dist = trade_strat['distance']
+        print("Found distance from ATM", dist)
+        sell_position = atm_position - dist
+        buy_position = sell_position - trade_strat["width"]
+
+   
     print ( "At the Money Strike = ", "{:.2f}".format(atm_strike))
-    print ( "Sell OTM Strike     = ", "{:.2f}".format(strikes[ atm_position - 1]))
-    print ( "Buy OTM Strike      = ", "{:.2f}".format(strikes[ atm_position - (1+ trade_strat["width"] ) ]))
+    print ( "Sell OTM Strike     = ", "{:.2f}".format(strikes[ sell_position]))
+    print ( "Buy OTM Strike      = ", "{:.2f}".format(strikes[ buy_position ]))
+   
 
     # Pull Option leg symbols
-    sell_leg = chain[str(strikes[ atm_position - 1] )]  
+    sell_leg = chain[str(strikes[ sell_position] )]  
     sell_leg = sell_leg[0]
     print("Sell leg   :" , sell_leg["symbol"] )
 
-    buy_leg = chain[str(strikes[ atm_position - (1+ trade_strat["width"])])]
+    buy_leg = chain[str(strikes[ buy_position])]
     buy_leg = buy_leg[0]
     print("Buy leg    :", buy_leg["symbol"])
 
@@ -233,19 +259,20 @@ def trading_vertical(trade_strat, trade_date  ):
     price_mid = round( sell_leg['mid'] - buy_leg['mid'],2) 
     price_target = round( price_mid * trade_strat["target"] , 2) # adjust the target to get better fills
     # XSP doesn't do nickle steps in pricing, need to add code to not use steps
-    price_target = nicklefy(price_target)  # convert to a 5 cent mark
+    if trade_strat['under'] == '$SPX.X':  #SPX needs to be nickled
+        print("Nickefing the price for SPX")
+        price_target = nicklefy(price_target)  # convert to a 5 cent mark
 
     print("Price Bid    = {:.2f}".format(sell_leg['bid'] )," - Price Ask = {:.2f}".format(buy_leg['ask']), " = Price Nat = ", "{:.2f}".format(price_nat))
     print("Price High   = {:.2f}".format(price_high))
     print("Price Mid    = {:.2f}".format(price_mid))
     print("Price Target = {:.2f}".format(price_target), "(",trade_strat["target"],")" )
     print(" ")
-
+    
     # Ready the order (PUT or CALL??)
-    put_order = bull_put_vertical_open(buy_leg["symbol"],sell_leg["symbol"],trade_strat["quantity"], price_target)
-   
+    put_order = bull_put_vertical_open(buy_leg["symbol"],sell_leg["symbol"],trade_strat["quantity"], str(price_target))
+
     #place the order - support multi accts later
-  
     print("Making the trade...")
     r = c.place_order(config.ACCOUNT_ID, put_order)
 
@@ -256,21 +283,24 @@ def trading_vertical(trade_strat, trade_date  ):
     else :  
             print("FAILED - placing the order failed.")
             make_trade = False  # stop the closing order
+            return
 
 
     # wait 5 for order to be submitted & maybe filled
     time.sleep(60)  # wait 60 seconds
     # Need to add code to  check if order is filled ? loop?
-    order_id, make_trade = check_fulfillment(put_order, order_id,price_target, .05)
+    order_id, make_trade = check_fulfillment(put_order, order_id,price_target, .05, trade_strat['under'])
 
 
 
     #place close order
     if trade_strat["closing"] > 0 and make_trade  :
             close_price_target = round(price_target * (1-trade_strat["closing"]), 2)  #Set limit order at the inverse of the profit goal
-            close_price_target = nicklefy(close_price_target)  # convert to a 5 cent mark
+            if trade_strat['under'] == '$SPX.X':  #SPX needs to be nickled
+                print("Nickefing the price for SPX")
+                close_price_target = nicklefy(close_price_target)  # convert to a 5 cent mark
             print(" Placing closing order at ",close_price_target)
-            put_order = bull_put_vertical_close(buy_leg["symbol"],sell_leg["symbol"],trade_strat["quantity"], close_price_target)
+            put_order = bull_put_vertical_close(buy_leg["symbol"],sell_leg["symbol"],trade_strat["quantity"], str(close_price_target))
             put_order.set_duration(orders.common.Duration.GOOD_TILL_CANCEL)
             r = c.place_order(config.ACCOUNT_ID, put_order)
 
@@ -283,6 +313,7 @@ def trading_vertical(trade_strat, trade_date  ):
 
  
     return 
+
 
 ##########################################################################################
 def check_auth_token ():
@@ -397,7 +428,9 @@ def trading_butterfly(trade_strat, trade_date  ):
     price_high = round((sell_leg['mark'] *2) - (buy_lower_leg['mark'] + buy_higher_leg['mark']) ,2)
     price_mid  = round((sell_leg['mid'] *2) - (buy_lower_leg['mid'] + buy_higher_leg['mid']) ,2)
     price_target = round( price_mid * trade_strat["target"] , 2) # lower the target to get better fills
-    price_target = nicklefy(price_target)  # convert to a 5 cent mark
+    if trade_strat['under'] == '$SPX.X':  #SPX needs to be nickled
+        print("Nickefing the price for SPX")
+        price_target = nicklefy(price_target)  # convert to a 5 cent mark
 
     print("Price Nat    = ", "{:.2f}".format(price_nat))
     print("Price High   = ", "{:.2f}".format(price_high))
@@ -412,7 +445,7 @@ def trading_butterfly(trade_strat, trade_date  ):
         .set_duration(Duration.DAY) \
         .set_order_strategy_type(OrderStrategyType.SINGLE) \
         .set_order_type(OrderType.NET_CREDIT) \
-        .copy_price(price_target) \
+        .copy_price(str(price_target)) \
         .set_quantity(trade_strat["quantity"] ) \
         .set_requested_destination(Destination.AUTO) \
         .set_session(Session.NORMAL) \
@@ -444,7 +477,9 @@ def trading_butterfly(trade_strat, trade_date  ):
     if trade_strat["closing"] > 0  and make_trade :
             print(" Placing closing order.")
             close_price_target = price_target * (1-trade_strat["closing"])
-            close_price_target = (round((close_price_target/5))*5 ) / 100  # convert to a 5 cent mark
+            if trade_strat['under'] == '$SPX.X':  #SPX needs to be nickled
+                print("Nickefing the price for SPX")
+                close_price_target = nicklefy(close_price_target)  # convert to a 5 cent mark
             put_order = bull_put_vertical_close(buy_leg["symbol"],sell_leg["symbol"],trade_strat["quantity"], close_price_target)
             put_order.set_duration(orders.common.Duration.GOOD_TILL_CANCEL)
             ###r = c.place_order(config.ACCOUNT_ID, put_order)
