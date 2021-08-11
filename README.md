@@ -50,4 +50,4 @@ https://www.buymeacoffee.com/greybeardcode
 ## Updates
 2021-0803 - Added new Aug 2021 0dte rules, cleaned up common code, added BWB trade bot
 2021-0809 - cleaned up common code, added order monitoring 
-2021-0810 - Added code to support distance or delta for spreads. Added 30dte on Tuedays, Added support for XSP
+2021-0810 - Added code to support distance or delta for spreads. Added 30dte on Tuesdays, Added support for XSP
