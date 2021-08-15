@@ -31,6 +31,7 @@ BWB_4_dte_strategies = {
     'Main' :{
         'under' : '$SPX.X',
         'filter': '3over8',
+        'delta': 55,
         'type' : 'PUT',
         'closing': 0,
         'quantity': 1,

@@ -26,13 +26,13 @@ Seven_dte_strategies = {
     'Main' :{
         'under' : '$SPX.X',
         'filter': '8over21',
-        'distance': 1,
+        'delta': 47,  # Rules are 48
         'direction': 'OTM',
         'type': 'PUT',
         'width': 2,
         'closing': 0,
         'quantity': 1,
-        'target' :.90
+        'target' : 1.1
     },
 }
 
@@ -48,7 +48,7 @@ print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
 if today.weekday() == 2:
     trade_day="Wednesday"
     trade_strat =  Seven_dte_strategies[ "Main"]
-    trade_date = today + timedelta( day=7)
+    trade_date = today + timedelta( days=7)
 
 
     # Start the logs/ reporting

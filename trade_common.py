@@ -125,13 +125,15 @@ def check_fulfillment (order, order_id, org_price, decrement, underlying):
             api_key= config.API_KEY,
             redirect_uri=config.REDIRECT_URI,
             token_path=config.TOKEN_PATH)
-
     order_status = client.get_order(order_id, config.ACCOUNT_ID).json()
-    #print(json.dumps(order_status, indent=4))  # testing
-    print("Order status:", order_status['status'])
+    
     loop_count =0
     lower_price = org_price
     while order_status['status'] not in ['FILLED', 'REJECTED', 'CANCELED'] :
+
+        order_status = client.get_order(order_id, config.ACCOUNT_ID).json()
+        print("Order status:", order_status['status'])
+
         loop_count += 1
         print(" Changing price by",decrement,"and reordering. ",loop_count)
         #change price
@@ -153,12 +155,14 @@ def check_fulfillment (order, order_id, org_price, decrement, underlying):
             break
 
 
-        time.sleep(60)  # wait 60 seconds
         if loop_count == 5:  #TD Ameri fails the order at this point
             print("Giving up on lowering price to fill")
             break
+    
+        # wait 60 sec and loop
+        time.sleep(60)  # wait 60 seconds
 
-
+    print("Final order status:", order_status['status'])
     return order_id, make_trade
         
 ##############################################################################
@@ -223,7 +227,7 @@ def trading_vertical(trade_strat, trade_date  ):
             #find maching delta
             #print(strike, chain[strike][0]['delta'])
             strike_delta = abs(chain[strike][0]['delta'])*100
-            if strike_delta > trade_strat['delta'] :
+            if strike_delta >= trade_strat['delta'] :
                 strike= float(strike)
                 print("Found Delta", strike, strike_delta)
                 sell_position = strikes.index(strike)
@@ -384,9 +388,9 @@ def trading_butterfly(trade_strat, trade_date  ):
     for strike in chain :
             data= chain[strike]
             #print(data)
-            #print(strike, " Delta:", data[0]['delta'] ) 
-            if abs(data[0]['delta'] ) > 0.55 :
-                print(" Delta over 55:",strike, " Delta:", data[0]['delta'] ) 
+            delta = abs(data[0]['delta'] ) *100
+            if delta >= trade_strat['delta'] :
+                print(" Delta over 55:",strike, " Delta:",delta ) 
                 body_strike = float(strike)
                 break
         
@@ -396,7 +400,7 @@ def trading_butterfly(trade_strat, trade_date  ):
        
 
     # Buy at 2 lower and 1 higher
-    print ( "Delta 55 Body = ", "{:.2f}".format(strikes[body_position]))
+    print ( "Delta 55 Body = ", "{:.2f}".format(strikes[ body_position]))
     print ( "Lower Strike  = ", "{:.2f}".format(strikes[ body_position - 2]))
     print ( "Higher Strike = ", "{:.2f}".format(strikes[ body_position + 1 ]))
 
@@ -471,7 +475,7 @@ def trading_butterfly(trade_strat, trade_date  ):
     # wait 5 for order to be submitted & maybe filled
     time.sleep(60)  # wait 60 seconds
     # check if order is filled , send starting price too
-    order_id, make_trade = check_fulfillment(order, order_id,price_target, .05)
+    order_id, make_trade = check_fulfillment(order, order_id,price_target, .05,trade_strat["under"])
   
     #place close order
     if trade_strat["closing"] > 0  and make_trade :
