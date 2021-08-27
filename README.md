@@ -1,6 +1,6 @@
 # TD Ameritrade Automated Trading
 Automated trading scripts for placing trades on TD Ameritrade based on the strategies from Stock Market Options Trading
-https://www.stockmarketoptionstrading.net
+https://www.stockmarketoptionstrading.net  Includes some ideas from Eric's Patreon- https://www.patreon.com/VerticalSpreadOptionsTrading/posts
 
 
 ## Prereqs

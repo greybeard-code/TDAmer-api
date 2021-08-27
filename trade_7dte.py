@@ -34,6 +34,17 @@ Seven_dte_strategies = {
         'quantity': 1,
         'target' : 1.1
     },
+     'Small' :{
+        'under' : '$XSP.X',
+        'filter': '8over21',
+        'delta': 47,  # Rules are 48
+        'direction': 'OTM',
+        'type': 'PUT',
+        'width': 1,
+        'closing': 0,
+        'quantity': 2,
+        'target' : 1
+    },
 }
 
 
@@ -63,6 +74,8 @@ if today.weekday() == 2:
 
     if make_trade:
         trade_common.trading_vertical( trade_strat, trade_date )
+    else :
+        print("Filter ",trade_strat["filter"],"failed. Halting trade.")
 
     trade_common.check_auth_token
 

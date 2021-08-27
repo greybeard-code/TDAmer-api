@@ -120,6 +120,8 @@ def check_fulfillment (order, order_id, org_price, decrement, underlying):
     #     the original price,  how much to subtract each loop, & what the underlying stock is
     #      (for 5 cent marking)
     make_trade = True
+    time.sleep(60)  # wait 60 seconds
+
     #Setup Client
     client = easy_client(
             api_key= config.API_KEY,
@@ -127,14 +129,18 @@ def check_fulfillment (order, order_id, org_price, decrement, underlying):
             token_path=config.TOKEN_PATH)
     order_status = client.get_order(order_id, config.ACCOUNT_ID).json()
     
-    loop_count =0
+    
     lower_price = org_price
-    while order_status['status'] not in ['FILLED', 'REJECTED', 'CANCELED'] :
-
+    #while order_status['status'] not in ['FILLED', 'REJECTED', 'CANCELED'] :
+    for loop_count in range(5):
         order_status = client.get_order(order_id, config.ACCOUNT_ID).json()
         print("Order status:", order_status['status'])
+        if order_status['status'] in ['FILLED', 'REJECTED', 'CANCELED'] :
+            break
+        if order_status['status'] in ['QUEUED'] :
+            print(" Order still in queue. Waiting 2 minutes.")
+            time.sleep(120)  # wait 120 seconds
 
-        loop_count += 1
         print(" Changing price by",decrement,"and reordering. ",loop_count)
         #change price
         lower_price = (lower_price - decrement ) #lower price 
@@ -155,9 +161,7 @@ def check_fulfillment (order, order_id, org_price, decrement, underlying):
             break
 
 
-        if loop_count == 5:  #TD Ameri fails the order at this point
-            print("Giving up on lowering price to fill")
-            break
+    
     
         # wait 60 sec and loop
         time.sleep(60)  # wait 60 seconds
@@ -292,8 +296,12 @@ def trading_vertical(trade_strat, trade_date  ):
 
     # wait 5 for order to be submitted & maybe filled
     time.sleep(60)  # wait 60 seconds
-    # Need to add code to  check if order is filled ? loop?
-    order_id, make_trade = check_fulfillment(put_order, order_id,price_target, .05, trade_strat['under'])
+    # Set price decrement?
+    decrement = .01
+    if trade_strat['under'] == '$SPX.X':  #SPX needs to be nickled
+        decrement = .05
+
+    order_id, make_trade = check_fulfillment(put_order, order_id,price_target, decrement, trade_strat['under'])
 
 
 

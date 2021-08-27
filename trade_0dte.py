@@ -34,7 +34,7 @@ Zero_dte_strategies = {
         'direction': 'OTM',
         'type': 'PUT',
         'width': 1,
-        'closing': 0,
+        'closing': .75,
         'quantity': 1,
         'target' : 1.0
     },
@@ -104,6 +104,8 @@ make_trade = trade_common.test_filter(trade_strat["filter"], trade_strat["under"
 
 if make_trade:
      trade_common.trading_vertical( trade_strat, trade_date )
+else :
+    print("Filter ",trade_strat["filter"],"failed. Halting trade.")
 
 trade_common.check_auth_token
 

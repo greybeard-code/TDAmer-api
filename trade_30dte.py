@@ -35,6 +35,17 @@ strategies = {
         'quantity': 1,
         'target' : 1
     },
+     'Small' :{
+        'under' : '$XSP.X',
+        'filter': 'CloseOver21',
+        'delta': 45,
+        'direction': 'OTM',
+        'type': 'PUT',
+        'width': 1,
+        'closing': 0,
+        'quantity': 2,
+        'target' : 1
+    },
 }
 
 
@@ -49,7 +60,7 @@ print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
 if today.weekday() == 1:
 #if True:
     trade_day="Tuesday"
-    trade_strat =  strategies[ "Main"]
+    trade_strat =  strategies[ "Small"]
     trade_date = today + timedelta( days=30)
     # make sure trade_date is a option day (M,W,or F)
     while trade_date.weekday() != 4:
@@ -69,6 +80,8 @@ if today.weekday() == 1:
 
     if make_trade:
         trade_common.trading_vertical( trade_strat, trade_date )
+    else :
+        print("Filter ",trade_strat["filter"],"failed. Halting trade.")
 
     trade_common.check_auth_token
 
@@ -76,6 +89,6 @@ if today.weekday() == 1:
     print(" ")
     print("Finshed at : ", datetime.now())
 else:
-    print(" ERROR - Only run this on Wednesday")
+    print(" ERROR - Only run this on Tuesdays")
 
 print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")

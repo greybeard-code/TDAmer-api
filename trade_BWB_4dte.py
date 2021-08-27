@@ -73,6 +73,8 @@ if trade_date in holidays.US():
 
 if make_trade:
     trade_common.trading_butterfly( trade_strat, trade_date )
+else :
+    print("Filter ",trade_strat["filter"]," or holiday test failed. Halting trade.")
 
 trade_common.check_auth_token
 
