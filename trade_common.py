@@ -2,7 +2,9 @@
 # See StockMartetOptionsTrading.net for info on trading
 # Code by Derek Jones
 
+from genericpath import exists
 from logging import makeLogRecord
+from os import write
 from tda import orders, utils
 from tda.orders.options import bull_put_vertical_open, bull_put_vertical_close
 from tda.orders.generic import OrderBuilder
@@ -20,7 +22,7 @@ from tda.client import Client
 from tda.utils import Utils
 import json, time, httpx, sys
 from datetime import datetime, timedelta
-import bisect 
+import bisect , os.path, csv
 import pandas as pd
 import config
 
@@ -160,15 +162,36 @@ def check_fulfillment (order, order_id, org_price, decrement, underlying):
             make_trade = False  # stop the closing order
             break
 
-
-    
-    
+   
         # wait 60 sec and loop
         time.sleep(60)  # wait 60 seconds
 
     print("Final order status:", order_status['status'])
+    trade_logger(order_status)
     return order_id, make_trade
-        
+
+##############################################################################
+def trade_logger(order_status ):
+    #record the detail about the order using pandas cvs
+    
+    # if file not exist, create with headers
+    if not os.path.exists( config.TRADE_LOG) :
+        with open( config.TRADE_LOG, mode='w') as trade_log_file :
+            trade_writer = csv.writer(trade_log_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            trade_writer.writerow(["Date","Order ID","Leg 1","Leg 2",'Price','Quantity','Status' ])
+
+    #print (json.dumps(order_status, indent =4))
+    with open( config.TRADE_LOG, mode='a+') as trade_log_file :
+        trade_writer = csv.writer(trade_log_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        trade_writer.writerow([ order_status['enteredTime'],order_status['orderId'],
+                                order_status['orderLegCollection'][0]['instrument']['symbol'],
+                                order_status['orderLegCollection'][1]['instrument']['symbol'],
+                                order_status['price'],order_status['quantity'],order_status['status']])
+        trade_log_file.close
+    
+    return
+
+
 ##############################################################################
 def trading_vertical(trade_strat, trade_date  ):
     #import trade strategy and trade date (expiration date)
@@ -189,7 +212,7 @@ def trading_vertical(trade_strat, trade_date  ):
     # Get the options chain from TDA
     results = c.get_option_chain( trade_strat["under"], 
             contract_type= trade_type,
-            strike_count= 20,
+            strike_count= 100,
             include_quotes=True,
             from_date= trade_date,
             to_date= trade_date )
@@ -233,7 +256,7 @@ def trading_vertical(trade_strat, trade_date  ):
             strike_delta = abs(chain[strike][0]['delta'])*100
             if strike_delta >= trade_strat['delta'] :
                 strike= float(strike)
-                print("Found Delta", strike, strike_delta)
+                print("Found Delta", strike, "{:.2f}".format(strike_delta) )
                 sell_position = strikes.index(strike)
                 buy_position = sell_position - trade_strat["width"]
                 break
