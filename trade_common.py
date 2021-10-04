@@ -24,6 +24,7 @@ import json, time, httpx, sys
 from datetime import datetime, timedelta
 import bisect , os.path, csv
 import pandas as pd
+import pandas_ta as ta
 import config
 
 ##############################################################################################
@@ -47,19 +48,20 @@ def test_filter (filter_name, stock) :
             frequency=Client.PriceHistory.Frequency.DAILY)
     history=resp.json( )
     df = pd.DataFrame(history["candles"])
+    df = df.sort_index()
     #convert date colum to readable text
     df["date"] = pd.to_datetime(df['datetime'], unit='ms')
     # calculate emas for each
-    df["21ema"] = pd.Series.ewm(df["close"], span=21).mean()
-    df["8ema"]  = pd.Series.ewm(df["close"], span=8).mean()
-    df["5ema"]  = pd.Series.ewm(df["close"], span=5).mean()
-    df["3ema"]  = pd.Series.ewm(df["close"], span=5).mean()
+    df["21ema"] = ta.ema(df["close"], length=21)
+    df["8ema"]  = ta.ema(df["close"], length=8)
+    df["5ema"]  = ta.ema(df["close"], length=5)
+    df["3ema"]  = ta.ema(df["close"], length=3)
 
     #clean up unused columns
     del df["volume"]
     del df["datetime"]
-    #print("Pricing History:")
-    #print ( df.tail())
+    print("Pricing History:")
+    print ( df.tail())
     print("")
 
     if filter_name =='Alpha5' :

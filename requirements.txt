@@ -1,0 +1,4 @@
+# requirements for TDAmeri-api project
+tda-api
+selenium
+httpx
