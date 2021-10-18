@@ -34,7 +34,7 @@ Zero_dte_strategies = {
         'direction': 'OTM',
         'type': 'PUT',
         'width': 1,
-        'closing': .75,
+        'closing': .50,
         'quantity': 1,
         'target' : 1.0
     },
@@ -56,7 +56,7 @@ Zero_dte_strategies = {
         'direction': 'OTM',
         'type': 'PUT',
         'width': 1,
-        'closing': .75,
+        'closing': .50,
         'quantity': 2,
         'target' : 1.10
     },

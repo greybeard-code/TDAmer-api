@@ -144,6 +144,7 @@ def check_fulfillment (order, order_id, org_price, decrement, underlying):
         if order_status['status'] in ['QUEUED'] :
             print(" Order still in queue. Waiting 2 minutes.")
             time.sleep(120)  # wait 120 seconds
+            continue
 
         print(" Changing price by",decrement,"and reordering. ",loop_count)
         #change price
@@ -336,7 +337,7 @@ def trading_vertical(trade_strat, trade_date  ):
             if trade_strat['under'] == '$SPX.X':  #SPX needs to be nickled
                 print("Nickefing the price for SPX")
                 close_price_target = nicklefy(close_price_target)  # convert to a 5 cent mark
-            print(" Placing closing order at ",close_price_target)
+            print(" Placing closing order at ${:.2f}".format(close_price_target), "(",trade_strat["closing"]*100,"%)" )
             put_order = bull_put_vertical_close(buy_leg["symbol"],sell_leg["symbol"],trade_strat["quantity"], str(close_price_target))
             put_order.set_duration(orders.common.Duration.GOOD_TILL_CANCEL)
             r = c.place_order(config.ACCOUNT_ID, put_order)
