@@ -15,7 +15,8 @@ import config
 
 from selenium import webdriver
 
-print("Checking status of TD Ameritrade authrntication token.")
+print("Checking status of TD Ameritrade authentication token.")
+print("Today: ", datetime.now() )
 # Read token
 if (os.path.exists(config.TOKEN_PATH) ):
     with open(config.TOKEN_PATH) as file:
@@ -26,8 +27,9 @@ if (os.path.exists(config.TOKEN_PATH) ):
     token_expires = token_created + timedelta( days=90)
     print("Token Created: ",  str(token_created) )
     print("Token Expires: ", str(token_expires) )
+    
     # delete token if it's expired
-    if (token_expires < datetime.now() - timedelta(days=7)):
+    if (token_expires < (datetime.now() - timedelta(days=7)) ):
         print("Authorization token expiring soon. Deleting old token.")
         os.remove(config.TOKEN_PATH)
 

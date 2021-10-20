@@ -27,6 +27,12 @@ import pandas as pd
 import pandas_ta as ta
 import config
 
+#Used for detail logging from TDA-API
+#import logging
+#logging.basicConfig(filename='trade_debug.log',  level=logging.DEBUG)
+#logging.getLogger('').addHandler(logging.StreamHandler())
+
+
 ##############################################################################################
 def test_filter (filter_name, stock) :
     print("Testing for", filter_name,"filter with", stock,".")
@@ -304,7 +310,8 @@ def trading_vertical(trade_strat, trade_date  ):
     print(" ")
     
     # Ready the order (PUT or CALL??)
-    put_order = bull_put_vertical_open(buy_leg["symbol"],sell_leg["symbol"],trade_strat["quantity"], str(price_target))
+    #put_order = bull_put_vertical_open(buy_leg["symbol"],sell_leg["symbol"],trade_strat["quantity"], str(price_target))
+    put_order = bull_put_vertical_open(buy_leg["symbol"],sell_leg["symbol"],trade_strat["quantity"], price_target)
 
     #place the order - support multi accts later
     print("Making the trade...")
