@@ -150,7 +150,8 @@ def check_fulfillment (order, order_id, org_price, decrement, underlying):
         if order_status['status'] in ['QUEUED'] :
             print(" Order still in queue. Waiting 2 minutes.")
             time.sleep(120)  # wait 120 seconds
-            continue
+            if order_status['status'] in ['FILLED', 'REJECTED', 'CANCELED'] :
+                break
 
         print(" Changing price by",decrement,"and reordering. ",loop_count)
         #change price
