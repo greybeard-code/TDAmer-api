@@ -147,11 +147,11 @@ def check_fulfillment (order, order_id, org_price, decrement, underlying):
         print("Order status:", order_status['status'])
         if order_status['status'] in ['FILLED', 'REJECTED', 'CANCELED'] :
             break
-        if order_status['status'] in ['QUEUED'] :
-            print(" Order still in queue. Waiting 2 minutes.")
-            time.sleep(120)  # wait 120 seconds
-            if order_status['status'] in ['FILLED', 'REJECTED', 'CANCELED'] :
-                break
+        #if order_status['status'] in ['QUEUED'] :
+          #  print(" Order still in queue. Waiting 2 minutes.")
+         #   time.sleep(120)  # wait 120 seconds
+          #  if order_status['status'] in ['FILLED', 'REJECTED', 'CANCELED'] :
+           #     break
 
         print(" Changing price by",decrement,"and reordering. ",loop_count)
         #change price
@@ -178,7 +178,7 @@ def check_fulfillment (order, order_id, org_price, decrement, underlying):
 
     print("Final order status:", order_status['status'])
     trade_logger(order_status)
-    return order_id, make_trade
+    return order_id, make_trade, lower_price
 
 ##############################################################################
 def trade_logger(order_status ):
@@ -329,19 +329,21 @@ def trading_vertical(trade_strat, trade_date  ):
 
 
     # wait 5 for order to be submitted & maybe filled
-    time.sleep(60)  # wait 60 seconds
+    #moved wait to fulfilment code
+    #time.sleep(60)  # wait 60 seconds
+    
     # Set price decrement?
     decrement = .01
     if trade_strat['under'] == '$SPX.X':  #SPX needs to be nickled
         decrement = .05
 
-    order_id, make_trade = check_fulfillment(put_order, order_id,price_target, decrement, trade_strat['under'])
+    order_id, make_trade, lower_price = check_fulfillment(put_order, order_id,price_target, decrement, trade_strat['under'])
 
 
 
     #place close order
     if trade_strat["closing"] > 0 and make_trade  :
-            close_price_target = round(price_target * (1-trade_strat["closing"]), 2)  #Set limit order at the inverse of the profit goal
+            close_price_target = round(lower_price * (1-trade_strat["closing"]), 2)  #Set limit order at the inverse of the profit goal
             if trade_strat['under'] == '$SPX.X':  #SPX needs to be nickled
                 print("Nickefing the price for SPX")
                 close_price_target = nicklefy(close_price_target)  # convert to a 5 cent mark
@@ -517,12 +519,12 @@ def trading_butterfly(trade_strat, trade_date  ):
     # wait 5 for order to be submitted & maybe filled
     time.sleep(60)  # wait 60 seconds
     # check if order is filled , send starting price too
-    order_id, make_trade = check_fulfillment(order, order_id,price_target, .05,trade_strat["under"])
+    order_id, make_trade, lower_price = check_fulfillment(order, order_id,price_target, .05,trade_strat["under"])
   
     #place close order
     if trade_strat["closing"] > 0  and make_trade :
             print(" Placing closing order.")
-            close_price_target = price_target * (1-trade_strat["closing"])
+            close_price_target = lower_price * (1-trade_strat["closing"])
             if trade_strat['under'] == '$SPX.X':  #SPX needs to be nickled
                 print("Nickefing the price for SPX")
                 close_price_target = nicklefy(close_price_target)  # convert to a 5 cent mark
